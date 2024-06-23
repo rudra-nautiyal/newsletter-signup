@@ -1,15 +1,14 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const request = require("request")
 const https = require("https");
 
 const app = express();
 
 app.use(express.static("public"));
-app.use(bodyParser.urlencoded({ extended: true}))
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/", function(req, res) {
-    res.sendFile(__dirname + "/signup.html")
+    res.sendFile(__dirname + "/signup.html");
 });
 
 app.post("/", function(req, res){
@@ -37,10 +36,10 @@ app.post("/", function(req, res){
 
     const options = {
         method: "POST",
-        auth: "rudra:3d9252dcb01ff3d13d4461ef12ff0361-us22"
-    }
+        auth: `rudra:${process.env.MAILCHIMP_API_KEY}`
+    };
 
-    const request = https.request(url,options, function(response) {
+    const request = https.request(url, options, function(response) {
 
         if (response.statusCode === 200) {
             res.sendFile(__dirname + "/success.html");
@@ -49,22 +48,24 @@ app.post("/", function(req, res){
         }
         response.on("data", function(data){
             console.log(JSON.parse(data));
-        })
-    })
+        });
+    });
+
+    request.on('error', function(error) {
+        console.error('Error making Mailchimp API request:', error);
+        res.sendFile(__dirname + "/failure.html");
+    });
 
     request.write(jsonData);
     request.end();
 
 });
 
-
 app.post("/failure", function(req, res) {
     res.redirect("/");
 });
 
-app.listen(process.env.PORT || 3000, function() { 
-    console.log("Server is Online!");
-})
-
-// 3d9252dcb01ff3d13d4461ef12ff0361-us22
-// 41b42c9162
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, function() { 
+    console.log(`Server is Online! Listening on port ${PORT}`);
+});
